@@ -1,0 +1,145 @@
+<html>
+<meta charset=utf-8 />
+<body>
+<div action="http://127.0.0.1:8081/process_get" method="GET">
+    <label id="selectedProject">选择上传的项目</label> <br>
+    <div id="project">
+
+
+    </div>
+    <br>
+    <label id="selectedSubProject">选择上传的的子项目</label> <br>
+    <div id="subProject">
+
+
+    </div>
+    <br>
+    <label id="status"></label> <br>
+    <input type="file" multiple name="input" id="input" accept="image/xlsx" />
+
+</div>
+</body>
+
+
+<script type="text/javascript">
+
+    let onSelectProject = function(idx) {
+        let selectedProject = window.config.projects[idx];
+        window.selectedProject = selectedProject;
+        document.getElementById("selectedProject").textContent = selectedProject.name;
+
+        let subProjects = selectedProject.subProjects;
+
+        let subDiv = document.getElementById("subProject");
+        subDiv.innerHTML = "";
+
+        for(let i = 0, length = subProjects.length; i < length; i++) {
+            let subProject = subProjects[i];
+            let button = document.createElement('button');
+            button.textContent = subProject;
+            button.onclick = () => {
+                onSelectSubProject(i)
+            };
+            subDiv.appendChild(button);
+        }
+    };
+
+    let onSelectSubProject = function(idx) {
+        window.selectedSubProject = window.selectedProject.subProjects[idx];
+        document.getElementById("selectedSubProject").textContent = window.selectedSubProject;
+    };
+
+    let freshProject = function (configs) {
+        window.config = configs;
+        const div = document.getElementById("project");
+        div.innerHTML = "";
+
+        for(let i = 0, length = configs.projects.length; i < length; i++) {
+            let config = configs.projects[i];
+            let button = document.createElement('button');
+            button.textContent = config.name;
+            button.onclick = () => {
+                onSelectProject(i);
+            };
+            div.appendChild(button);
+        }
+
+    };
+
+    (function () {
+        let xhr = new XMLHttpRequest();
+        let url = "http://127.0.0.1:8081/config";
+        xhr.open("get", url, true);
+        console.log("send get config");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                let response = xhr.responseText;
+                let reData = JSON.parse(response);
+                console.log("config :", reData);
+                freshProject(reData);
+
+            }
+        };
+
+        xhr.send();
+
+
+    })();
+</script>
+
+<script type="text/javascript">
+    (function () {
+        const inputElement = document.getElementById("input");
+        inputElement.addEventListener("change", handleFiles, false);
+        function handleFiles() {
+            let files = this.files;
+
+            if(files.length == 0) return;
+
+            let form = new FormData();
+            let url = 'http://127.0.0.1:8081/upload'; //服务器上传地址
+
+            let projectName = window.selectedProject.name;
+            let subProjectName = window.selectedSubProject;
+
+            // url+= "/" + projectName;
+            // url+= "/" + subProjectName;
+            form.append("project", projectName);
+            form.append("subProject", subProjectName);
+
+            for(let i = 0, length = files.length; i < length; i++) {
+                let file = files[i];
+                form.append('files', file, file.name);
+            }
+
+            let xhr = new XMLHttpRequest();
+            xhr.open("post", url, true);
+
+            //上传进度事件
+            xhr.upload.addEventListener("progress", function(result) {
+                if (result.lengthComputable) {
+                    //上传进度
+                    var percent = (result.loaded / result.total * 100).toFixed(2);
+                    document.getElementById("status").textContent = `上传中... ${percent}%`
+                }
+            }, false);
+
+            xhr.addEventListener("readystatechange", function() {
+                var result = xhr;
+                if (result.status != 200) { //error
+                    console.log('上传失败', result.status, result.statusText, result.response);
+                }
+                else if (result.readyState == 4) { //finished
+                    console.log('上传成功', result);
+                }
+            });
+
+            xhr.send(form); //开始上传
+
+        }
+
+    })();
+</script>
+
+
+</html>

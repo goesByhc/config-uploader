@@ -1,0 +1,32 @@
+{
+  "name": "config-uploader",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm run build",
+    "build:live": "nodemon --exec ./node_modules/.bin/ts-node -- ./index.ts",
+    "build": "./node_modules/.bin/ts-node -- ./index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@code.inke.cn:inno/sirius/config-uploader.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@types/express": "^4.17.11",
+    "@types/multer": "^1.4.5",
+    "@types/multiparty": "^0.0.32",
+    "@types/node": "^14.14.31",
+    "body-parser": "^1.19.0",
+    "cookie-parser": "^1.4.5",
+    "express": "^4.17.1",
+    "multer": "^1.4.2",
+    "multiparty": "^4.2.2",
+    "ts-node": "^9.1.1"
+  },
+  "devDependencies": {
+    "cors": "^2.8.5"
+  }
+}

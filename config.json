@@ -1,0 +1,12 @@
+{
+  "projects": [
+    {
+    "name": "flightchess",
+    "subProjects": ["test", "laohu", "shanhu", "hanchao"]
+    },
+    {
+      "name": "hauntedhouse",
+      "subProjects": ["test", "laohu", "shanhu", "hanchao"]
+    }
+  ]
+}
