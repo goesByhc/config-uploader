@@ -1,3 +1,3 @@
 #!/bin/bash
 
-pm2 stop config-uploader
+pm2 delete config-uploader
