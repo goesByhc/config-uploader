@@ -1,7 +1,7 @@
 <html>
 <meta charset=utf-8 />
 <body>
-<div action="http://127.0.0.1:8081/process_get" method="GET">
+<div action="#SERVER_URL#/process_get" method="GET">
     <label id="selectedProject">选择上传的项目</label> <br>
     <div id="project">
 
@@ -14,12 +14,24 @@
 
     </div>
     <br>
-    <label id="status"></label> <br>
-    <input type="file" multiple name="input" id="input" accept="image/xlsx" />
+    <label id="status" ></label>
+    <br>
+    <input type="file" multiple name="input" id="input" accept=".xlsx" />
+    <br>
+    <br>
+    <button id="clearBtn">清空项目excel和bin</button>
+
+    <br>
+    <br>
+    <a href="#SERVER_URL#/projects">浏览产物</a>
 
 </div>
 </body>
+<script type="text/javascript">
+    window.SERVER_URL = "#SERVER_URL#"
 
+
+</script>
 
 <script type="text/javascript">
 
@@ -36,6 +48,7 @@
         for(let i = 0, length = subProjects.length; i < length; i++) {
             let subProject = subProjects[i];
             let button = document.createElement('button');
+            button.style.margin = "5px";
             button.textContent = subProject;
             button.onclick = () => {
                 onSelectSubProject(i)
@@ -58,6 +71,7 @@
             let config = configs.projects[i];
             let button = document.createElement('button');
             button.textContent = config.name;
+            button.style.margin = "5px";
             button.onclick = () => {
                 onSelectProject(i);
             };
@@ -68,7 +82,7 @@
 
     (function () {
         let xhr = new XMLHttpRequest();
-        let url = "http://127.0.0.1:8081/config";
+        let url = SERVER_URL + "/config";
         xhr.open("get", url, true);
         console.log("send get config");
         xhr.onreadystatechange = function () {
@@ -87,8 +101,71 @@
     })();
 </script>
 
+
+<script type="text/javascript">
+
+    let refreshStatusLb = function(text) {
+        document.getElementById("status").innerText = text;
+    };
+
+    let queryResult = function() {
+
+        let texts = [
+            "没有找到任务id",
+            "没有找到任务id",
+            "任务排队中...",
+            "解析中，请耐心等待",
+            "解析完成！",
+            "解析失败！",
+        ];
+
+        let xhr = new XMLHttpRequest();
+        xhr.open("get", `${SERVER_URL}/result/?taskId=${window.taskId}`, true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                let response = xhr.responseText;
+                let status = JSON.parse(response).status;
+                console.log("status", status);
+                refreshStatusLb(texts[status]);
+                if (status == 2 || status == 3) {
+                    setTimeout(() => {
+                        queryResult();
+                    }, 0.5 * 1000);
+                }
+            }
+        };
+
+        xhr.send();
+
+    };
+
+</script>
+
 <script type="text/javascript">
     (function () {
+
+
+        const clearBtn = document.getElementById("clearBtn");
+        clearBtn.onclick = () => {
+
+            if (!selectedSubProject || !selectedProject) {
+                refreshStatusLb("请先选择项目");
+                return;
+            }
+
+            let xhr = new XMLHttpRequest();
+            let url = SERVER_URL + `/clear/?project=${selectedProject.name}&subProject=${selectedSubProject}`;
+            xhr.open("get", url, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    console.log("res", xhr.responseText);
+                    refreshStatusLb(xhr.responseText);
+                }
+            };
+            xhr.send();
+
+        };
+
         const inputElement = document.getElementById("input");
         inputElement.addEventListener("change", handleFiles, false);
         function handleFiles() {
@@ -97,7 +174,7 @@
             if(files.length == 0) return;
 
             let form = new FormData();
-            let url = 'http://127.0.0.1:8081/upload'; //服务器上传地址
+            let url = SERVER_URL + "/upload"; //服务器上传地址
 
             let projectName = window.selectedProject.name;
             let subProjectName = window.selectedSubProject;
@@ -119,18 +196,21 @@
             xhr.upload.addEventListener("progress", function(result) {
                 if (result.lengthComputable) {
                     //上传进度
-                    var percent = (result.loaded / result.total * 100).toFixed(2);
-                    document.getElementById("status").textContent = `上传中... ${percent}%`
+                    let percent = (result.loaded / result.total * 100).toFixed(2);
+                    refreshStatusLb(`上传中... ${percent}%`);
                 }
             }, false);
 
             xhr.addEventListener("readystatechange", function() {
-                var result = xhr;
+                let result = xhr;
                 if (result.status != 200) { //error
                     console.log('上传失败', result.status, result.statusText, result.response);
                 }
                 else if (result.readyState == 4) { //finished
-                    console.log('上传成功', result);
+                    let taskId = JSON.parse(xhr.responseText).taskId;
+                    window.taskId = taskId;
+                    queryResult();
+                    console.log('上传成功', result, "taskId:", taskId);
                 }
             });
 

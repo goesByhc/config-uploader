@@ -3,10 +3,14 @@
  */
 import * as express from 'express';
 import {Application} from 'express';
-import {basePath, indexHtml, ListenPort} from "./Config";
+import {basePath, indexHtmlPath, ListenPort} from "./Config";
 import {AddressInfo} from "net";
-import {projectConfig} from "./Init";
+import {IndexHtmlText, projectConfig} from "./Init";
 import * as multiparty from 'multiparty';
+import {clearFolder, readAndWriteFile} from "./Util";
+import {Task, TaskManager, TaskQueryResult} from "./Task";
+import * as serveIndex from "serve-index";
+
 
 const cors = require('cors');
 
@@ -17,19 +21,40 @@ export function initRouter(app: Application) {
 
     app.get('/', function (req, res) {
         res.setHeader('Content-Type', 'text/html');
-        res.sendFile(indexHtml);
+        res.send(IndexHtmlText);
     });
 
-    app.use('/public', express.static('public'));
+    app.use('/projects', serveIndex(basePath + '/projects'));
+    app.use('/projects', express.static(basePath + '/projects'));
 
     app.get('/config', function (req, res) {
         res.send(projectConfig);
     });
 
+    app.get('/clear', function (req, res) {
+        let project = req.query.project as string;
+        let subProject = req.query.subProject as string;
+        let path = getProjectPath(project, subProject);
+        clearFolder(path+ "/excel");
+        clearFolder(path+ "/bin");
+        res.send("清理成功");
+    });
+
+    app.get('/result', function (req, res) {
+        let taskId = req.query.taskId as string;
+        let result = 0;
+        if (taskId) {
+            result = TaskManager.getInstance().getTaskStatus(parseInt(taskId));
+        } else {
+            result = TaskQueryResult.Unknown;
+        }
+        res.send(JSON.stringify({status: result}));
+    });
+
     initUpload(app);
 
     console.log("start listen");
-    let server = app.listen(ListenPort, function () {
+    let server = app.listen(projectConfig.ServerPort, function () {
         let address = server.address() as AddressInfo;
 
         let host = address.address;
@@ -47,19 +72,26 @@ function initUpload(app: Application) {
     app.post('/upload/', function (req, res, next) {
         let form = new multiparty.Form();
 
-        form.parse(req, function(err, fields, files) {
+        form.parse(req, async function(err, fields, files) {
             let excels = files.files;
             let project = fields.project[0];
             let subProject = fields.subProject[0];
-            let newPath =  `${basePath}/projects/${project}/${subProject}/`;
+            let projectPath = getProjectPath(project, subProject);
+            let newPath = projectPath + "/excel/";
             for (let i = 0; i < excels.length; i++) {
-                let singleImg = excels[i];
-                newPath += singleImg.originalFilename;
-                res.write("File uploaded to: " + newPath);
+                let excel = excels[i];
+                await readAndWriteFile(excel.path, newPath + excel.originalFilename);
             }
 
-            res.send();
+            let cmd = `sh ${basePath}/tools/gen_data.sh ${projectPath}/excel/ ${projectPath}/bin/`;
+            let task = new Task(cmd);
+            TaskManager.getInstance().addTask(task);
+            res.send(JSON.stringify({taskId: task.id}));
         });
 
     })
+}
+
+function getProjectPath(project: string, subProject: string): string {
+    return `${basePath}/projects/${project}/${subProject}`
 }

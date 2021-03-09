@@ -1,12 +1,14 @@
 {
   "projects": [
     {
-    "name": "flightchess",
-    "subProjects": ["test", "laohu", "shanhu", "hanchao"]
+      "name": "flightchess",
+      "subProjects": ["test", "laohu", "shanhu", "hanchao", "xingguo", "zhangqi", "weiguo"]
     },
     {
       "name": "hauntedhouse",
       "subProjects": ["test", "laohu", "shanhu", "hanchao"]
     }
-  ]
+  ],
+  "ServerIP": "127.0.0.1",
+  "ServerPort": 8081
 }

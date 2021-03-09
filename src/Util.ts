@@ -12,12 +12,33 @@ export function isFolderExist(path: string): Promise<boolean> {
     })
 }
 
-export function writeFile() {
+export function clearFolder(path: string) {
+    let files = [];
+    if(fs.existsSync(path)){
+        files = fs.readdirSync(path);
+        files.forEach((file, index) => {
+            let curPath = path + "/" + file;
+            if(fs.statSync(curPath).isDirectory()){
+                clearFolder(curPath); //递归删除文件夹
+            } else {
+                fs.unlinkSync(curPath); //删除文件
+            }
+        });
+        fs.rmdirSync(path);
+    }
+}
 
-    // fs.writeFile(newPath,data, function(err) {
-    //     if (err) console.log('ERRRRRR!! :'+err);
-    //     console.log('Fitxer: '+singleImg.originalFilename +' - '+ newPath);
-    // })
+export function readAndWriteFile(path: string, newPath: string): Promise<void> {
+
+    return new Promise<void>((resolve) => {
+        fs.readFile(path, function (err, data) {
+            fs.writeFile(newPath, data, function (err) {
+                if (err) console.log('ERRRRRR!! :' + err);
+                console.log('Fitxer: ' + path + ' - ' + newPath);
+                resolve();
+            })
+        })
+    });
 }
 
 export async function prepareFolder(path: string): Promise<void> {

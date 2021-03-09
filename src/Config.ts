@@ -3,9 +3,9 @@
  */
 import * as path from "path";
 
-export let basePath = path.join(__dirname + "/../");
+export let basePath = path.join(__dirname + "/..");
 
-export let indexHtml = basePath + "index.html";
+export let indexHtmlPath = basePath + "/index.html";
 
 
 export let ListenPort = 8081;

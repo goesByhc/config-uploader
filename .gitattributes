@@ -7,3 +7,5 @@
 *.mp3 		binary
 *.wav 		binary
 *.ttf 		binary
+*.java      binary
+*.jar       binary
