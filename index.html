@@ -20,7 +20,9 @@
     <br>
     <br>
     <button id="clearBtn">清空项目excel和bin</button>
-
+    <br>
+    <br>
+    <button id="downloadBtn">下载excel和bin</button>
     <br>
     <br>
     <a href="#SERVER_URL#/projects">浏览产物</a>
@@ -143,7 +145,15 @@
 
 <script type="text/javascript">
     (function () {
-
+        const downloadBtn = document.getElementById("downloadBtn");
+        downloadBtn.onclick = () => {
+            if (!selectedSubProject || !selectedProject) {
+                refreshStatusLb("请先选择项目");
+                return;
+            }
+            let url = SERVER_URL + `/download/?project=${selectedProject.name}&subProject=${selectedSubProject}`;
+            window.open(url, '_self')
+        };
 
         const clearBtn = document.getElementById("clearBtn");
         clearBtn.onclick = () => {

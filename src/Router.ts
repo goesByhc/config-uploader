@@ -10,7 +10,8 @@ import * as multiparty from 'multiparty';
 import {clearFolder, readAndWriteFile} from "./Util";
 import {Task, TaskManager, TaskQueryResult} from "./Task";
 import * as serveIndex from "serve-index";
-
+import * as archiver from "archiver";
+import * as fs from "fs";
 
 const cors = require('cors');
 
@@ -29,6 +30,27 @@ export function initRouter(app: Application) {
 
     app.get('/config', function (req, res) {
         res.send(projectConfig);
+    });
+
+    app.get('/download', function (req, res) {
+        let project = req.query.project as string;
+        let subProject = req.query.subProject as string;
+
+        let archive = archiver('zip');
+        let projectPath = getProjectPath(project, subProject);
+        const output = fs.createWriteStream(projectPath + '/archive.zip');
+        // output.on('end', function() {
+        //     res.download(projectPath + '/archive.zip');
+        // });
+
+        output.on('finish', function() {
+            res.download(projectPath + '/archive.zip');
+        });
+        archive.directory(projectPath+ "/bin/", "bin");
+        archive.directory(projectPath+ "/excel/", "excel");
+        archive.pipe(output);
+        archive.finalize();
+
     });
 
     app.get('/clear', function (req, res) {
