@@ -22,3 +22,5 @@ projects/
 node_modules/
 
 DataProto/
+
+nohup.out
