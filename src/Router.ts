@@ -35,8 +35,8 @@ export function initRouter(app: Application) {
         let project = req.query.project as string;
         let subProject = req.query.subProject as string;
         let path = getProjectPath(project, subProject);
-        clearFolder(path+ "/excel");
-        clearFolder(path+ "/bin");
+        clearFolder(path+ "/excel/");
+        clearFolder(path+ "/bin/");
         res.send("清理成功");
     });
 

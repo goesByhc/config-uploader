@@ -6,7 +6,7 @@
     },
     {
       "name": "hauntedhouse",
-      "subProjects": ["test", "laohu", "shanhu", "hanchao"]
+      "subProjects": ["test", "laohu", "shanhu", "hanchao", "xingguo", "zhangqi", "weiguo"]
     }
   ],
   "ServerIP": "127.0.0.1",

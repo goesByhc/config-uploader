@@ -12,19 +12,22 @@ export function isFolderExist(path: string): Promise<boolean> {
     })
 }
 
-export function clearFolder(path: string) {
+export function clearFolder(path: string, depth: number = 0) {
     let files = [];
     if(fs.existsSync(path)){
         files = fs.readdirSync(path);
         files.forEach((file, index) => {
             let curPath = path + "/" + file;
             if(fs.statSync(curPath).isDirectory()){
-                clearFolder(curPath); //递归删除文件夹
+                clearFolder(curPath, depth + 1); //递归删除文件夹
             } else {
                 fs.unlinkSync(curPath); //删除文件
             }
         });
-        fs.rmdirSync(path);
+
+        if (depth > 0) {
+            fs.rmdirSync(path);
+        }
     }
 }
 
