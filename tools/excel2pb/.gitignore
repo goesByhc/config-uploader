@@ -1,0 +1,5 @@
+.idea
+.DS_Store
+
+bin/
+src/com/goesby/conf
